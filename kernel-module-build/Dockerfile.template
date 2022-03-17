@@ -1,0 +1,58 @@
+ARG IMAGE_NAME=balenalib/%%BALENA_MACHINE_NAME%%-debian
+
+FROM $IMAGE_NAME:build as build
+
+# RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python bison
+RUN install_packages \
+    apt-transport-https \
+    awscli \
+    bc \
+    bison \
+    build-essential \
+    ca-certificates \
+    curl \
+    flex \
+    git \
+    kmod \
+    libelf-dev \
+    libssl-dev \
+    pkg-config \
+    python \
+    && update-ca-certificates
+
+
+WORKDIR /usr/src/app
+
+RUN echo "Getting Wireguard kernel source" \
+    && git clone git://git.zx2c4.com/wireguard-linux-compat
+
+
+ENV BALENA_MACHINE_NAME=%%BALENA_MACHINE_NAME%%
+ENV BALENA_OS_VERSION_URL '2.88.4%2Brev1.dev'
+ENV BALENA_OS_VERSION '2.88.4+rev1.dev'
+
+RUN curl -fsSL "https://files.balena-cloud.com/images/${BALENA_MACHINE_NAME}/${BALENA_OS_VERSION_URL}/kernel_source.tar.gz" \
+    | tar xz --strip-components=2 -C /usr/src/app/
+
+ENV src="/usr/src/app/wireguard-linux-compat/src"
+# ENV output="/usr/src/app/output"
+
+
+# build wireguard kernel module
+RUN make -C /usr/src/app/build modules_prepare -j"$(nproc)"
+
+ENV output="/usr/src/app/output/wireguard-linux-compat_${BALENA_MACHINE_NAME}_${BALENA_OS_VERSION}"
+RUN mkdir -p "${output}" && cp -R "${src}"/* "${output}"
+WORKDIR /usr/src/app/output
+RUN make -C /usr/src/app/build M="$output" -j"$(nproc)" modules
+
+COPY . /usr/src/app
+WORKDIR /usr/src/app/
+# RUN ./build.sh build \
+#     --device %%BALENA_MACHINE_NAME%% \
+#     --os-version "${BALENA_OS_VERSION}"\
+#     --src wireguard-linux-compat/src/
+
+FROM $IMAGE_NAME:run as release
+
+CMD ./run.sh
