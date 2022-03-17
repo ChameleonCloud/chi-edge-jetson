@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 OS_VERSION=$(echo "$BALENA_HOST_OS_VERSION" | cut -d " " -f 2)
 echo "OS Version is $OS_VERSION"
@@ -10,10 +9,10 @@ for each in $mod_dir; do
 	echo Loading module from "$each"
 	insmod "$each/wireguard.ko"
 	lsmod | grep wireguard
-	rmmod wireguard
 done
 
 
+set -x
 wg_up() {
   local iface="$1"
   local suffix="${iface##wg-}"
