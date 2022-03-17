@@ -1,13 +1,13 @@
-from ipaddress import IPv4Network
 import os
-from pathlib import Path
 import subprocess
 import time
 import traceback
+from ipaddress import IPv4Network
+from pathlib import Path
 
+import requests
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
-import requests
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
@@ -69,7 +69,7 @@ def get_channel_patch(hardware, channel_name, pubkey):
         return [
             {
                 "op": "replace" if existing_channel else "add",
-                "path": f"/properties/channel/{channel_name}",
+                "path": f"/properties/channels/{channel_name}",
                 "value": expected_channel,
             }
         ]
