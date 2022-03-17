@@ -1,34 +1,38 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
+ARG IMAGE_NAME=balenalib/%%BALENA_MACHINE_NAME%%-ubuntu
+ARG OS_RELEASE=bionic
 
-WORKDIR /build
+FROM ${IMAGE_NAME}:${OS_RELEASE}-build as build
+
+WORKDIR /usr/src/app
+
+RUN echo "Getting Wireguard kernel source" \
+    && git clone git://git.zx2c4.com/wireguard-linux-compat
+
 
 ENV BALENA_MACHINE_NAME=%%BALENA_MACHINE_NAME%%
+ENV BALENA_OS_VERSION_URL '2.88.4%2Brev1.dev'
+ENV BALENA_OS_VERSION '2.88.4+rev1.dev'
+
+# Download kernel source, and prepare to build modules
+RUN curl -fsSL "https://files.balena-cloud.com/images/${BALENA_MACHINE_NAME}/${BALENA_OS_VERSION_URL}/kernel_source.tar.gz" \
+    | tar xz --strip-components=2 -C /usr/src/app/
+RUN make -C /usr/src/app/build modules_prepare -j"$(nproc)"
+
+# Set paths based on device and os version
+ENV src="/usr/src/app/wireguard-linux-compat/src"
+ENV output="/usr/src/app/output/wireguard-linux-compat_${BALENA_MACHINE_NAME}_${BALENA_OS_VERSION}"
+RUN mkdir -p "${output}" && cp -R "${src}"/* "${output}"
+
+# build wireguard kernel module
+RUN make -C /usr/src/app/build M="$output" -j"$(nproc)" modules
+FROM ${IMAGE_NAME}:${OS_RELEASE}-run as release
 
 RUN install_packages \
-    curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod \
-    apt-transport-https ca-certificates
+    wireguard-tools
 
-RUN update-ca-certificates
+WORKDIR /usr/src/app/
+COPY --from=build /usr/src/app/output/ /usr/src/app/output
 
-COPY install-wireguard.sh ./install-wireguard.sh
-RUN ./install-wireguard.sh
-
-FROM balenalib/%%BALENA_MACHINE_NAME%%:run as release
-
-WORKDIR /wireguard
-
-# Use a "flag" file to allow conditional copy of the second file argument
-# (using path glob trick) -- it's possible wireguard.ko was not built if it
-# was not necessary to do so.
-COPY --from=build /build/kmod_built /build/wireguard.ko* ./
-COPY --from=build /build/tools /
-
-RUN install_packages kmod
-
-WORKDIR /docker
-
-COPY entrypoint.sh /docker/entrypoint.sh
-ENTRYPOINT ["/docker/entrypoint.sh"]
-
-COPY start.sh /docker/start.sh
-CMD ["./start.sh"]
+COPY entrypoint.sh run.sh /usr/src/app/
+ENTRYPOINT [ "entrypoint.sh" ]
+CMD run.sh
