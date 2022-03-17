@@ -39,13 +39,12 @@ services:
       - wireguard_etc:/etc/wireguard
     labels:
       io.balena.features.kernel-modules: "1"
-  # coordinator:
-  #   build: ./coordinator
-  #   volumes:
-  #     - wireguard_etc:/etc/wireguard
-  #   labels:
-  #     io.balena.features.supervisor-api: "1"
-
+  coordinator:
+    build: ./coordinator
+    volumes:
+      - wireguard_etc:/etc/wireguard
+    labels:
+      io.balena.features.supervisor-api: "1"
 
 volumes:
   k3s_data_dir: {}
