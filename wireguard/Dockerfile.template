@@ -34,5 +34,5 @@ WORKDIR /usr/src/app/
 COPY --from=build /usr/src/app/output/ /usr/src/app/output
 
 COPY entrypoint.sh start.sh /usr/src/app/
-ENTRYPOINT [ "entrypoint.sh" ]
-CMD start.sh
+ENTRYPOINT [ "./entrypoint.sh" ]
+CMD ["/usr/src/app/start.sh"]
