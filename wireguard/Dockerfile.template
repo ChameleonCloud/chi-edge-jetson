@@ -33,6 +33,6 @@ RUN install_packages \
 WORKDIR /usr/src/app/
 COPY --from=build /usr/src/app/output/ /usr/src/app/output
 
-COPY entrypoint.sh run.sh /usr/src/app/
+COPY entrypoint.sh start.sh /usr/src/app/
 ENTRYPOINT [ "entrypoint.sh" ]
-CMD run.sh
+CMD start.sh
