@@ -25,6 +25,13 @@ RUN mkdir -p "${output}" && cp -R "${src}"/* "${output}"
 
 # build wireguard kernel module
 RUN make -C /usr/src/app/build M="$output" -j"$(nproc)" modules
+
+COPY ipip/ ipip/
+ENV src="/usr/src/app/ipip/src"
+ENV output="/usr/src/app/output/ipip_${BALENA_MACHINE_NAME}_${BALENA_OS_VERSION}"
+RUN mkdir -p "${output}" && cp -R "${src}"/* "${output}"
+RUN make -C /usr/src/app/build M="$output" -j"$(nproc)" modules
+
 FROM ${IMAGE_NAME}:${OS_RELEASE}-run as release
 
 RUN install_packages \
