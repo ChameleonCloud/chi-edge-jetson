@@ -1,11 +1,12 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
+FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu:bionic-build as build
 
 ARG K3S_VERSION=v1.22.5%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh %%BALENA_ARCH%%
 
-FROM balenalib/%%BALENA_MACHINE_NAME%%:run as run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu:bionic-run as run
+RUN install_packages nvidia-container-runtime
 
 COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 
