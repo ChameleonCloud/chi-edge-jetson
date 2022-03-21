@@ -18,6 +18,7 @@
 [plugins.cri.containerd]
   snapshotter = "{{ .NodeConfig.AgentConfig.Snapshotter }}"
   disable_snapshot_annotations = {{ if eq .NodeConfig.AgentConfig.Snapshotter "stargz" }}false{{else}}true{{end}}
+  default_runtime_name = "nvidia"
 {{ if eq .NodeConfig.AgentConfig.Snapshotter "stargz" }}
 {{ if .NodeConfig.AgentConfig.ImageServiceSocket }}
 [plugins.stargz]
