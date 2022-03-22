@@ -20,7 +20,6 @@ RUN install_packages wget tar lbzip2 python3 libegl1 && \
     sed -i 's/LC_ALL=C chroot . mount -t proc none \/proc/ /g' nv_tegra/nv-apply-debs.sh && \
     sed -i 's/umount ${L4T_ROOTFS_DIR}\/proc/ /g' nv_tegra/nv-apply-debs.sh && \
     sed -i 's/chroot . \//  /g' nv_tegra/nv-apply-debs.sh && \
-    cd Linux_for_Tegra && \
     ./apply_binaries.sh -r / --target-overlay && cd .. \
     rm -rf jetson-210_linux_r32.6.1_aarch64.tbz2 && \
     rm -rf Linux_for_Tegra && \
